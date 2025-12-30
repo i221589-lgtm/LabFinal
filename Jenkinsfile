@@ -3,59 +3,56 @@ pipeline {
 
     environment {
         VENV = "venv"
-        DEPLOY_DIR = "/tmp/flask_deploy"
+        DEPLOY_DIR = "C:\\flask_deploy"
     }
 
     stages {
 
         stage('Clone Repository') {
             steps {
+                echo "cloning repo"
                 git branch: 'main',
                     url: 'https://github.com/i221589-lgtm/LabFinal.git'
-              echo "cloning repo" 
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                python -m venv $VENV
-                . $VENV/bin/activate
-                pip install --upgrade pip
+                bat '''
+                python -m venv %VENV%
+                call %VENV%\\Scripts\\activate
+                python -m pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
-              echo "installing dependencies" 
             }
         }
 
         stage('Run Unit Tests') {
             steps {
-                sh '''
-                . $VENV/bin/activate
+                bat '''
+                call %VENV%\\Scripts\\activate
                 pytest
                 '''
-              echo "testing" 
             }
         }
 
         stage('Build Application') {
             steps {
-                sh '''
-                mkdir -p build
-                cp -r app.py requirements.txt build/
+                bat '''
+                if not exist build mkdir build
+                copy app.py build\\
+                copy requirements.txt build\\
                 '''
-              echo "building" 
             }
         }
 
         stage('Deploy Application') {
             steps {
-                sh '''
-                mkdir -p $DEPLOY_DIR
-                cp -r build/* $DEPLOY_DIR/
-                echo "Application deployed to $DEPLOY_DIR"
+                bat '''
+                if not exist %DEPLOY_DIR% mkdir %DEPLOY_DIR%
+                xcopy build %DEPLOY_DIR% /E /Y
+                echo Application deployed to %DEPLOY_DIR%
                 '''
-              echo "Deploying" 
             }
         }
     }
